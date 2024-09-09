@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>بازی حباب‌ها</title>
+<style>
+body {
+margin: 0;
+overflow: hidden;
+background-color: #f0f8ff;
+font-family: Arial, sans-serif;
+}
+canvas {
+display: block;
+position: absolute;
+z-index: 1;
+}
+#scoreDisplay, #highScoreDisplay, #footerText {
+position: absolute;
+font-size: 20px;
+background-color: rgba(255, 255, 255, 0.7); /* پس‌زمینه سفید با شفافیت */
+padding: 5px; /* برای فاصله دادن متن از حاشیه */
+border-radius: 5px; /* گرد کردن گوشه‌ها برای ظاهر بهتر */
+border: 2px solid black; /* اضافه کردن حاشیه مشکی */
+z-index: 2; /* اطمینان از اینکه این عناصر روی پس‌زمینه و حباب‌ها نمایش داده می‌شوند */
+}
+#scoreDisplay {
+top: 10px;
+left: 10px;
+color: #000;
+}
+#highScoreDisplay {
+top: 10px;
+right: 10px;
+color: #ffd700;
+}
+#footerText {
+bottom: 10px;
+right: 10px;
+font-size: 12px;
+color: #000;
+background-color: transparent; /* اطمینان از اینکه پس‌زمینه متن پایین صفحه شفاف است */
+padding: 0;
+border: none;
+}
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+<div id="scoreDisplay">امتیاز: 0</div>
+<div id="highScoreDisplay">بالاترین امتیاز: 0</div>
+<div id="footerText">victor family</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let bubbles = [];
+let score = 0;
+let highScore = 0;
+let bubbleSpeed = 2;
+let spawnCount = 1; // تعداد پایه ای حباب‌ها
+
+const scoreDisplay = document.getElementById('scoreDisplay');
+const highScoreDisplay = document.getElementById('highScoreDisplay');
+let showRedScreen = false; // فلگ برای صفحه قرمز
+let redScreenTimer = 0;  // برای تایمر صفحه قرمز
+
+const bubbleImage = new Image();
+bubbleImage.src = 'https://cdn.discordapp.com/attachments/1257073052966064261/1282523742949347380/InShot_20240909_053912981.png?ex=66dfaad0&is=66de5950&hm=d8e37c4d3151bc5f0fa7ef01d060ec2aeda1eb6a486ce64bbe0e1bb7e39fd620&';
+
+const backgroundImage = new Image();backgroundImage.src = 'https://dorpic.ir/wp-content/uploads/2021/12/پس-زمینه-جنگل-و-رودخانه-1.webp';
+
+backgroundImage.onload = function() {
+function resizeCanvas() {
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+drawBackground(); // دوباره رسم پس‌زمینه بعد از تغییر اندازه
+}
+
+function drawBackground() {
+ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+}
+
+class Bubble {
+constructor(x, y, radius, speed) {
+this.x = x;
+this.y = y;
+this.radius = radius;
+this.speed = speed;
+}
+
+draw() {
+ctx.drawImage(bubbleImage, this.x - this.radius, this.y - this.radius, this.radius * 2, this.radius * 2);
+}
+
+move() {
+this.y += this.speed;
+}
+
+isClicked(mouseX, mouseY) {
+const dx = this.x - mouseX;
+const dy = this.y - mouseY;
+const distance = Math.sqrt(dx * dx + dy * dy);
+return distance < this.radius + 40; // افزایش اندازه کلیک
+}
+
+isOffScreen() {
+return this.y - this.radius > canvas.height;
+}
+}
+
+function spawnBubble() {
+const x = Math.random() * canvas.width;
+const y = -30;
+const radius = 30;
+const speed = bubbleSpeed + Math.random() * 3;
+bubbles.push(new Bubble(x, y, radius, speed));
+}
+
+function spawnBubbles() {
+for (let i = 0; i < spawnCount; i++) {
+spawnBubble();
+}
+}
+
+function update() {
+if (showRedScreen) {
+ctx.fillStyle = 'red';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+redScreenTimer -= 1;
+if (redScreenTimer <= 0) {
+showRedScreen = false;
+}
+} else {
+ctx.clearRect(0, 0, canvas.width, canvas.height); // پاک کردن حافظه صفحه
+drawBackground(); // رسم پس‌زمینه در هر فریم
+}
+
+bubbles.forEach((bubble, index) => {
+bubble.move();
+bubble.draw();
+if (bubble.isOffScreen()) {
+bubbles.splice(index, 1);
+resetScore();
+}
+});
+requestAnimationFrame(update);
+}
+
+function resetScore() {
+if (score > highScore) {
+highScore = score;
+updateHighScoreDisplay();
+}
+score = 0;
+spawnCount = 1; // تنظیم تعداد حباب‌ها به مقدار پایه
+bubbleSpeed = 2;[]
+triggerRedScreen(); // فعال کردن صفحه قرمز
+updateScoreDisplay();
+}
+
+function updateScoreDisplay() {
+scoreDisplay.textContent = 'امتیاز: ' + score;
+}
+
+function updateHighScoreDisplay() {
+highScoreDisplay.textContent = 'بالاترین امتیاز: ' + highScore;
+}
+
+function increaseBubbleSpeed() {
+if (score > 0 && score % 15 === 0) {
+bubbleSpeed += 1;
+spawnCount *= 1.01; // تعداد حباب‌ها را نصف می‌کند
+if (spawnCount < 1) {
+spawnCount = 1; // اطمینان از اینکه حداقل یک حباب ایجاد می‌شود
+}
+}
+}
+
+function triggerRedScreen() {
+showRedScreen = true;
+redScreenTimer = 0.5 * 60; // 0.5 ثانیه به فریم‌ها (فرض 60 فریم در ثانیه)
+}
+
+canvas.addEventListener('click', (event) => {
+const rect = canvas.getBoundingClientRect();
+const mouseX = event.clientX - rect.left;
+const mouseY = event.clientY - rect.top;
+bubbles.forEach((bubble, index) => {
+if (bubble.isClicked(mouseX, mouseY)) {
+bubbles.splice(index, 1);
+score++;
+updateScoreDisplay();
+increaseBubbleSpeed();
+}
+});
+});
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+setInterval(spawnBubbles, 1000); // شروع ایجاد حباب‌ها با دوره اولیه
+updateScoreDisplay();
+updateHighScoreDisplay();
+requestAnimationFrame(update);
+};
+</script>
+
+</body>
+</html>
