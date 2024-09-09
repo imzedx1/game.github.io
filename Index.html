@@ -173,7 +173,7 @@ highScoreDisplay.textContent = 'بالاترین امتیاز: ' + highScore;
 function increaseBubbleSpeed() {
 if (score > 0 && score % 15 === 0) {
 bubbleSpeed += 1;
-spawnCount *= 1.01; // تعداد حباب‌ها را نصف می‌کند
+spawnCount *= 1.001; // تعداد حباب‌ها را نصف می‌کند
 if (spawnCount < 1) {
 spawnCount = 1; // اطمینان از اینکه حداقل یک حباب ایجاد می‌شود
 }
